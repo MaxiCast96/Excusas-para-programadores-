@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Excusas Técnicas</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #0a0a23;
+            color: #4aee88;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            background-color: #1b1b32;
+            border-radius: 8px;
+            border: 2px solid #4aee88;
+            box-shadow: 0 0 20px rgba(74, 238, 136, 0.5);
+            padding: 2rem;
+            max-width: 800px;
+            width: 90%;
+            margin: 2rem;
+            position: relative;
+        }
+        
+        .glitch-effect {
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            color: rgba(74, 238, 136, 0.8);
+            text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff;
+            font-size: 0.9rem;
+            transform: rotate(-5deg);
+            user-select: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-shadow: 0 0 5px #4aee88;
+        }
+        
+        .terminal {
+            background-color: #0a0a23;
+            border-radius: 5px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: left;
+            position: relative;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .terminal::before {
+            content: "$ ./excusa.sh";
+            display: block;
+            margin-bottom: 1rem;
+            color: #ddd;
+        }
+        
+        .terminal-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: #333;
+            border-radius: 5px 5px 0 0;
+            padding: 5px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #ddd;
+        }
+        
+        .blinking-cursor {
+            display: inline-block;
+            width: 0.7em;
+            height: 1em;
+            margin-left: 5px;
+            background-color: #4aee88;
+            animation: blink 1s step-end infinite;
+        }
+        
+        @keyframes blink {
+            from, to { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        
+        .excuse {
+            font-size: 1.5rem;
+            margin: 1rem 0;
+        }
+        
+        .translated-excuse {
+            font-size: 1.2rem;
+            margin: 1rem 0;
+            padding: 0.5rem;
+            border-left: 3px solid #4aee88;
+            font-style: italic;
+            background-color: rgba(74, 238, 136, 0.1);
+        }
+        
+        .tech-img {
+            margin: 1rem 0;
+            height: 120px;
+            filter: hue-rotate(120deg) brightness(1.2);
+        }
+        
+        button {
+            background-color: #4aee88;
+            color: #0a0a23;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            font-family: 'Courier New', monospace;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(74, 238, 136, 0.5);
+        }
+        
+        button:hover {
+            background-color: #0a0a23;
+            color: #4aee88;
+            border: 2px solid #4aee88;
+            transform: scale(1.05);
+        }
+        
+        .share-buttons {
+            margin-top: 2rem;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .share-buttons button {
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+        }
+        
+        .translate-buttons {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+        }
+        
+        .translate-buttons button {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .lang-icon {
+            font-size: 1.2rem;
+        }
+        
+        .social-icon {
+            width: 24px;
+            height: 24px;
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+        
+        /* Matriz digital en el fondo */
+        .matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+        
+        .error-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #ff5555;
+            color: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            z-index: 1000;
+            box-shadow: 0 0 20px rgba(255, 85, 85, 0.5);
+            animation: fadeInOut 3s forwards;
+            max-width: 80%;
+            text-align: center;
+        }
+        
+        @keyframes fadeInOut {
+            0% { opacity: 0; }
+            15% { opacity: 1; }
+            85% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        
+        /* Efectos de brillo para elementos interactivos */
+        @keyframes glow {
+            from { box-shadow: 0 0 5px #4aee88; }
+            to { box-shadow: 0 0 20px #4aee88; }
+        }
+        
+        .counter {
+            font-size: 0.8rem;
+            margin-top: 1rem;
+            color: #aaa;
+        }
+        
+        .stats {
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            text-align: left;
+            border-top: 1px solid #4aee88;
+            padding-top: 1rem;
+            width: 100%;
+        }
+        
+        .stats h3 {
+            text-align: center;
+        }
+        
+        .stat-item {
+            margin: 0.5rem 0;
+        }
+        
+        .loading {
+            display: inline-block;
+            position: relative;
+            width: 80px;
+            height: 80px;
+        }
+        
+        .loading div {
+            position: absolute;
+            border: 4px solid #4aee88;
+            opacity: 1;
+            border-radius: 50%;
+            animation: loading 1s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+        }
+        
+        .loading div:nth-child(2) {
+            animation-delay: -0.5s;
+        }
+        
+        .loading-dots {
+            display: inline-block;
+            position: relative;
+        }
+        
+        .loading-dots::after {
+            content: '...';
+            display: inline-block;
+            animation: dots 1.5s infinite;
+            width: 1.5em;
+            text-align: left;
+        }
+        
+        @keyframes dots {
+            0% { content: '.'; }
+            33% { content: '..'; }
+            66% { content: '...'; }
+            100% { content: '.'; }
+        }
+        
+        @keyframes loading {
+            0% {
+                top: 36px;
+                left: 36px;
+                width: 0;
+                height: 0;
+                opacity: 1;
+            }
+            100% {
+                top: 0px;
+                left: 0px;
+                width: 72px;
+                height: 72px;
+                opacity: 0;
+            }
+        }
+        
+        /* Estilos para el indicador de traducción */
+        .translation-indicator {
+            display: inline-block;
+            margin-left: 10px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            background-color: rgba(74, 238, 136, 0.2);
+            font-size: 0.8rem;
+        }
+        
+        /* Estilos responsivos */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .excuse {
+                font-size: 1.2rem;
+            }
+            
+            .container {
+                padding: 1rem;
+                margin: 1rem;
+            }
+            
+            button {
+                padding: 0.8rem 1.5rem;
+                font-size: 1rem;
+            }
+            
+            .share-buttons {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .translate-buttons {
+                flex-wrap: wrap;
+            }
+        }
+        
+        /* Easter egg */
+        .konami-activated {
+            animation: rainbow 5s linear infinite;
+        }
+        
+        @keyframes rainbow {
+            0% { color: red; }
+            16% { color: orange; }
+            33% { color: yellow; }
+            50% { color: green; }
+            66% { color: blue; }
+            83% { color: indigo; }
+            100% { color: violet; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="matrix-canvas" class="matrix-bg"></canvas>
+    
+    <div class="container">
+        <span class="glitch-effect">sudo chmod 777 /excuses</span>
+        <h1>Generador de Excusas Técnicas</h1>
+        
+        <div class="terminal">
+            <div class="terminal-header">bash - 80x24</div>
+            <div id="excuse-output" class="excuse">Cargando excusa perfecta...</div>
+            <span class="blinking-cursor"></span>
+        </div>
+        
+        <button id="generate-btn" onclick="generateExcuse()">Generar Otra Excusa</button>
+        
+        <div class="share-buttons">
+            <button id="copy-btn" onclick="copyExcuse()">
+                <svg class="social-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                Copiar
+            </button>
+            <button onclick="shareExcuse('twitter')">
+                <svg class="social-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path>
+                </svg>
+                X/Twitter
+            </button>
+        </div>
+        
+        <div class="translate-buttons">
+            <button onclick="translateExcuse('en')">
+                <span class="lang-icon">🇺🇸</span> English
+            </button>
+            <button onclick="translateExcuse('fr')">
+                <span class="lang-icon">🇫🇷</span> Français
+            </button>
+            <button onclick="translateExcuse('de')">
+                <span class="lang-icon">🇩🇪</span> Deutsch
+            </button>
+            <button onclick="translateExcuse('pt')">
+                <span class="lang-icon">🇵🇹</span> Português
+            </button>
+            <button onclick="translateExcuse('it')">
+                <span class="lang-icon">🇮🇹</span> Italiano
+            </button>
+        </div>
+        
+        <div class="counter">
+            Excusas generadas hoy: <span id="excuse-counter">0</span>
+        </div>
+        
+        <div class="stats">
+            <h3>Estadísticas de excusas</h3>
+            <div class="stat-item">Tiempo de trabajo perdido: <span id="work-time-saved">0</span> horas</div>
+            <div class="stat-item">Jefes confundidos: <span id="confused-bosses">0</span></div>
+            <div class="stat-item">Probabilidad de que alguien crea la excusa: <span id="belief-probability">0</span>%</div>
+            <div class="stat-item">Traducciones realizadas: <span id="translation-counter">0</span></div>
+        </div>
+    </div>
+    
+    <div id="error-popup" class="error-popup" style="display: none;"></div>
+    
+    <script>
+        // Arrays para construir las excusas
+        const excuseParts = {
+            subject: [
+                "El servidor DNS",
+                "El firewall",
+                "El cache de memoria",
+                "El sistema de microservicios",
+                "La API de terceros",
+                "El entorno de desarrollo",
+                "El repositorio Git",
+                "El sistema de CI/CD",
+                "La base de datos NoSQL",
+                "El contenedor Docker",
+                "El cluster de Kubernetes",
+                "El balanceador de carga",
+                "El proxy inverso",
+                "El framework JavaScript",
+                "La máquina virtual",
+                "El SSD",
+                "El certificado SSL",
+                "El daemon de sistemas", 
+                "El pipeline de datos",
+                "El script de bash heredado",
+                "La actualización de seguridad",
+                "El endpoint REST",
+                "La funcionalidad WebSocket",
+                "El algoritmo de machine learning",
+                "El CDN global",
+                "El mapa de bits",
+                "El sistema de mensajería"
+            ],
+            action: [
+                "está experimentando latencia",
+                "ha entrado en recursión infinita",
+                "está resolviendo dependencias cíclicas",
+                "se ha quedado sin handles",
+                "está corriendo migraciones imprevistas",
+                "ha perdido la conexión con la nube",
+                "está generando logs de errores",
+                "tiene fugas de memoria",
+                "no puede resolver promesas",
+                "está saturando el ancho de banda",
+                "está negando el servicio",
+                "ha excedido el límite de peticiones",
+                "está regenerando índices",
+                "tiene conflictos de versiones",
+                "necesita reiniciarse",
+                "está fragmentando la heap",
+                "requiere optimización manual",
+                "ha roto la compatibilidad",
+                "está mezclando espacios y tabulaciones",
+                "está tratando de dividir por cero",
+                "está atrapado en un deadlock",
+                "tiene un problema de concurrencia",
+                "ha generado una excepción no manejada",
+                "no puede parsear el JSON"
+            ],
+            reason: [
+                "debido a actualizaciones de seguridad no planificadas",
+                "por culpa de un error en las dependencias de NPM",
+                "porque alguien modificó la rama principal",
+                "gracias a la interferencia del router cuántico",
+                "debido a la llegada del viernes 13",
+                "porque falló la sincronización con el servidor NTP",
+                "gracias al último commit de un compañero",
+                "debido a una profecía antigua",
+                "porque Mercury está en retrógrado",
+                "por un incidente con café en el teclado",
+                "debido a un paquete abandonado por su mantenedor",
+                "porque alguien apagó y encendió el servidor equivocado",
+                "por un evento cósmico inesperado",
+                "debido a que el algoritmo ha desarrollado consciencia propia",
+                "porque nadie leía la documentación",
+                "debido a un error en la matriz",
+                "porque alguien usó espacios en lugar de tabulaciones",
+                "porque el lenguaje está deprecado pero nadie lo sabía",
+                "debido al desalineamiento de sectores en el disco duro",
+                "porque el código funciona en mi máquina",
+                "por una condición de carrera que solo ocurre en producción",
+                "debido a influencias lunares en los servidores",
+                "porque la IA está tomando decisiones cuestionables",
+                "debido a fluctuaciones en la matriz espacio-tiempo digital"
+            ],
+            impact: [
+                "Tendremos que reiniciar desde cero",
+                "Necesitaremos extender el sprint",
+                "Esto retrasará la entrega al menos 3 días",
+                "Tendremos que hacer un rollback completo",
+                "Necesitaré reescribir los tests unitarios",
+                "No podré entregar el feature hoy",
+                "La demostración tendrá que postergarse",
+                "Tendré que trabajar todo el fin de semana",
+                "Necesitaremos cambiar de framework",
+                "Esto invalida nuestra estimación inicial",
+                "La documentación tendrá que ser reescrita",
+                "Tendremos que restaurar desde el último backup",
+                "Necesitaremos una auditoría de código completa",
+                "Esto requiere una solución manual temporal",
+                "Tendremos que migrar a otra plataforma",
+                "La retrocompatibilidad está en riesgo",
+                "Deberemos reconsiderar toda la arquitectura",
+                "No hay solución conocida aún",
+                "Necesitaremos consultar a un especialista externo",
+                "Esto va a duplicar nuestro consumo de recursos",
+                "La única solución es apagar y volver a encender"
+            ]
+        };
+        
+        // Implementación de efectos de matriz digital en el fondo
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Ajustar tamaño del canvas
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        // Configuración de la matriz
+        const fontSize = 14;
+        const columns = canvas.width / fontSize;
+        const drops = [];
+        
+        // Inicializar posiciones de las gotas
+        for (let i = 0; i < columns; i++) {
+            drops[i] = Math.floor(Math.random() * canvas.height/fontSize);
+        }
+        
+        // Caracteres para la matriz digital
+        const matrix = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789@#$%^&*()*&^%+-/~{[|`]}";
+        
+        // Dibujar la matriz
+        function drawMatrix() {
+            // Semi-transparente para crear el efecto de desvanecimiento
+            ctx.fillStyle = 'rgba(10, 10, 35, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = '#4aee88';
+            ctx.font = fontSize + 'px monospace';
+            
+            // Bucle sobre cada gota
+            for (let i = 0; i < drops.length; i++) {
+                // Caracter aleatorio para mostrar
+                const text = matrix[Math.floor(Math.random() * matrix.length)];
+                
+                // x = i * tamaño de fuente, y = valor de drops[i] * tamaño de fuente
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                
+                // Enviar la gota de vuelta arriba aleatoriamente después de haberla dibujado
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                
+                // Incrementar para mover las gotas
+                drops[i]++;
+            }
+        }
+        
+        // Animación de la matriz
+        setInterval(drawMatrix, 35);
+        
+        // Variable para almacenar la excusa actual
+        let currentExcuse = "";
+        
+        // Generar una excusa técnica
+        function generateExcuse() {
+            // Limpiar traducciones anteriores
+            clearTranslations();
+            
+            // Mostrar animación de carga
+            document.getElementById('excuse-output').innerHTML = "Generando excusa perfecta<span class='loading-dots'></span>";
+            
+            // Simular tiempo de carga
+            setTimeout(() => {
+                const subject = excuseParts.subject[Math.floor(Math.random() * excuseParts.subject.length)];
+                const action = excuseParts.action[Math.floor(Math.random() * excuseParts.action.length)];
+                const reason = excuseParts.reason[Math.floor(Math.random() * excuseParts.reason.length)];
+                const impact = excuseParts.impact[Math.floor(Math.random() * excuseParts.impact.length)];
+                
+                currentExcuse = `${subject} ${action} ${reason}. ${impact}.`;
+                document.getElementById('excuse-output').innerText = currentExcuse;
+                
+                // Actualizar contador y estadísticas
+                incrementCounter();
+                updateStats();
+                
+                // Simular error técnico ocasional
+                if (Math.random() < 0.1) {
+                    setTimeout(showRandomError, 3000);
+                }
+            }, 1000);
+        }
+        
+        // Función para traducir la excusa usando LibreTranslate API
+        function translateExcuse(targetLang) {
+    if (!currentExcuse) {
+        showRandomError("No hay excusa para traducir. ¡Genera una primero!");
+        return;
+    }
+    
+    // Mostrar indicador de carga en la traducción
+    const translationId = `translation-${targetLang}`;
+    let translationElement = document.getElementById(translationId);
+    
+    // Preparar el elemento de traducción
+    if (translationElement) {
+        translationElement.innerHTML = `<span class="translation-indicator">${getLanguageName(targetLang)}</span> Traduciendo<span class='loading-dots'></span>`;
+    } else {
+        translationElement = document.createElement('div');
+        translationElement.id = translationId;
+        translationElement.className = 'translated-excuse';
+        translationElement.innerHTML = `<span class="translation-indicator">${getLanguageName(targetLang)}</span> Traduciendo<span class='loading-dots'></span>`;
+        document.querySelector('.terminal').appendChild(translationElement);
+    }
+    
+    // API de traducción gratuita sin clave (wrapper no oficial de Google Translate)
+    const apiUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(currentExcuse)}&langpair=es|${targetLang}`;
+    
+    fetch(apiUrl)
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Error en la API de traducción');
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Extraer el texto traducido
+        const translatedText = data.responseData ? data.responseData.translatedText : 'Error: No se pudo obtener la traducción';
+        
+        // Actualizar el elemento con la traducción
+        translationElement.innerHTML = `<span class="translation-indicator">${getLanguageName(targetLang)}</span> ${translatedText}`;
+        
+        // Incrementar el contador de traducciones
+        incrementTranslationCounter();
+    })
+    .catch(error => {
+        console.error('Error traduciendo:', error);
+        // Mostrar mensaje de error en la traducción
+        translationElement.innerHTML = `<span class="translation-indicator">${getLanguageName(targetLang)}</span> Error: No se pudo traducir. Intenta más tarde.`;
+        
+        // Mostrar popup de error
+        showRandomError("¡Error de traducción! El servidor de idiomas está ocupado. ¿Otra excusa técnica?");
+    });
+}
+
+        
+        // Función para limpiar las traducciones anteriores
+        function clearTranslations() {
+            const terminalElement = document.querySelector('.terminal');
+            const translationElements = terminalElement.querySelectorAll('[id^="translation-"]');
+            translationElements.forEach(element => element.remove());
+        }
+        
+        // Obtener el nombre del idioma a partir del código
+        function getLanguageName(langCode) {
+            const languages = {
+                'en': '🇺🇸 English',
+                'fr': '🇫🇷 Français',
+                'de': '🇩🇪 Deutsch',
+                'pt': '🇵🇹 Português',
+                'it': '🇮🇹 Italiano'
+            };
+            return languages[langCode] || langCode;
+        }
+        
+        // Función para mostrar error aleatorio
+        function showRandomError(customMessage) {
+            const errors = [
+                "ERROR 418: I'm a teapot. No puedo preparar café.",
+                "Se ha detectado un error de paridad en la Matrix.",
+                "Recursión excesiva detectada. ¿Has probado a reiniciar tu cerebro?",
+                "Ataque de código spagetti inminente. ¡Refactoriza y huye!",
+                "Error no encontrado. Esto parece un error en sí mismo."
+            ];
+            
+            const error = customMessage || errors[Math.floor(Math.random() * errors.length)];
+            const popup = document.getElementById('error-popup');
+            popup.innerText = error;
+            popup.style.display = 'block';
+            
+            setTimeout(() => {
+                popup.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Funciones de contador y estadísticas
+        function incrementCounter() {
+            let counter = parseInt(document.getElementById('excuse-counter').innerText);
+            document.getElementById('excuse-counter').innerText = counter + 1;
+        }
+        
+        function incrementTranslationCounter() {
+            let counter = parseInt(document.getElementById('translation-counter').innerText);
+            document.getElementById('translation-counter').innerText = counter + 1;
+        }
+        
+        function updateStats() {
+            // Tiempo de trabajo "salvado"
+            let workTime = parseFloat(document.getElementById('work-time-saved').innerText);
+            workTime += (Math.random() * 4 + 1);
+            document.getElementById('work-time-saved').innerText = workTime.toFixed(1);
+            
+            // Jefes confundidos
+            let bosses = parseInt(document.getElementById('confused-bosses').innerText);
+            if (Math.random() > 0.7) {
+                bosses += 1;
+            }
+            document.getElementById('confused-bosses').innerText = bosses;
+            
+            // Probabilidad de creencia
+            document.getElementById('belief-probability').innerText = 
+                Math.floor(Math.random() * 50 + 25);
+        }
+        
+        // Copiar excusa al portapapeles
+        function copyExcuse() {
+            const excuse = document.getElementById('excuse-output').innerText;
+            navigator.clipboard.writeText(excuse).then(() => {
+                // Cambiar texto del botón temporalmente
+                const copyBtn = document.getElementById('copy-btn');
+                const originalText = copyBtn.innerHTML;
+                copyBtn.innerHTML = `
+                    <svg class="social-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    ¡Copiado!
+                `;
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalText;
+                }, 2000);
+            });
+        }
+        
+        // Compartir en redes sociales
+        function shareExcuse(platform) {
+            const excuse = encodeURIComponent(document.getElementById('excuse-output').innerText);
+            const text = encodeURIComponent("Mi excusa técnica de hoy:");
+            
+            if (platform === 'twitter') {
+                window.open(`https://twitter.com/intent/tweet?text=${text}%0A%0A${excuse}%0A%0A&hashtags=ExcusaTecnica,ProgramadoresEnApuros`, '_blank');
+            }
+        }
+        
+        // Easter egg - Código Konami
+        const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+        let konamiIndex = 0;
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === konamiCode[konamiIndex]) {
+                konamiIndex++;
+                if (konamiIndex === konamiCode.length) {
+                    activateEasterEgg();
+                    konamiIndex = 0;
+                }
+            } else {
+                konamiIndex = 0;
+            }
+        });
+        
+        function activateEasterEgg() {
+            const excuseElement = document.getElementById('excuse-output');
+            excuseElement.classList.add('konami-activated');
+            excuseElement.innerText = "¡Has desbloqueado el modo desarrollador! Ahora todas tus excusas serán creíbles al 100%.";
+            
+            // Modo desarrollador temporal
+            setTimeout(() => {
+                excuseElement.classList.remove('konami-activated');
+                generateExcuse();
+            }, 5000);
+        }
+        
+        // Generar una excusa al cargar la página
+        document.addEventListener('DOMContentLoaded', generateExcuse);
+    </script>
+</body>
+</html>
